@@ -54,20 +54,44 @@ var _ = { };
     // TIP: Here's an example of a function that needs to iterate, which we've
     // implemented for you. Instead of using a standard `for` loop, though,
     // it uses the iteration helper `each`, which you will need to write.
+    var index = -1;
+
+    _.each(array, function(x, y){
+      if(x === target && index === -1){
+        index = y;
+      }
+    });
+
+    return index;
   };
 
   // Return all elements of an array that pass a truth test.
   _.filter = function(collection, iterator) {
+    var results = [];
+    _.each(collection, function(x){
+      if(iterator(x)){
+        results.push(x);
+      }
+    });
+    return results;
   };
 
   // Return all elements of an array that don't pass a truth test.
   _.reject = function(collection, iterator) {
     // TIP: see if you can re-use _.select() here, without simply
     // copying code in and modifying it
+    return _.filter(collection, function(value, i, collection){
+        return !iterator(value, i, collection);
+    });
   };
 
   // Produce a duplicate-free version of the array.
   _.uniq = function(array) {
+    var results = {};
+    _.each(array, function(value, i){
+      results[value] = true;
+    });
+    return Object.keys(results);
   };
 
 
@@ -76,6 +100,11 @@ var _ = { };
     // map() is a useful primitive iteration function that works a lot
     // like each(), but in addition to running the operation on all
     // the members, it also maintains an array of results.
+    var results = [];
+    _.each(array, function(value, i, array){
+      results.push(iterator(value));
+    });
+    return results;
   };
 
   /*
