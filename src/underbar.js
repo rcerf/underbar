@@ -127,6 +127,13 @@ var _ = { };
 
   // Calls the method named by methodName on each value in the list.
   _.invoke = function(list, methodName, args) {
+    return _.map(list, function(value){
+      if(typeof methodName === "function"){
+        return methodName.apply(value, args);
+      }
+      //I don't understand the syntax below.
+      return value[methodName].apply(value, args);
+    });
   };
 
   // Reduces an array or object to a single value by repetitively calling
@@ -143,12 +150,25 @@ var _ = { };
   //   }, 0); // should be 6
   //
   _.reduce = function(collection, iterator, initialValue) {
+    var total;
+    if(initialValue){
+      total = initialValue;
+    } else{
+      total = 0;
+    }
+    _.each(collection, function(value){
+      //I don't totally understand why passing two variables into iterator works.
+      //How am I suppose to know that I can pass two variables into interator?
+      total = iterator(total, value);
+    });
+    return total;
   };
 
   // Determine if the array or object contains a given value (using `===`).
   _.contains = function(collection, target) {
     // TIP: Many iteration problems can be most easily expressed in
     // terms of reduce(). Here's a freebie to demonstrate!
+    // how am I suppose to know that wasFound is a variable I could pull out of _.reduce?
     return _.reduce(collection, function(wasFound, item) {
       if(wasFound) {
         return true;
@@ -161,12 +181,29 @@ var _ = { };
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
+    iterator = iterator || function(item){
+      return item;
+    }
+
+    return !!_.reduce(collection, function(history, item){
+      if(!history){
+        return false;
+      }
+      return iterator(item);
+    }, true);
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
+    // if not everything is false then some are true.
+    iterator = iterator || function(item){
+      return item;
+    };
+    return !_.every(collection, function(item){
+      return !iterator(item);
+    })
   };
 
 
@@ -189,11 +226,29 @@ var _ = { };
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
+    //key insight: use "arguments" as the object to iterate through.
+    _.each(arguments, function(val, key){
+      _.each(val, function(value, key){
+        obj[key] = value;
+      });
+    });
+    return obj;
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    _.each(arguments, function(value, key, collection){
+      _.each(value, function(value, key, collection){
+        //why do you need to use hasOwnProperty?
+        //why does looking to see if obj[key] is falsey not work?
+        //hasOwnProperty checks the object locally for a key where obj[key] is not contained in this way.
+        if(!obj.hasOwnProperty(key)){
+          obj[key] = value;
+        }
+      });
+    });
+    return obj;
   };
 
 
@@ -234,6 +289,15 @@ var _ = { };
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    var result = {};
+
+    return function(){
+      var key = JSON.stringify(arguments);
+      if(!result.hasOwnProperty(key)){
+        result[key] = func.apply(this, arguments);
+      }
+      return result[key];
+    }
   };
 
   // Delays a function for the given number of milliseconds, and then calls
